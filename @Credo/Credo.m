@@ -1,14 +1,14 @@
-% File: SirahLaser.m @ SirahLaser
+% File: Credo.m @ Credo
 % Author: Urs Hofmann
 % Mail: hofmannu@biomed.ee.ethz.ch
 % Date: 22 Feb 2019
 % Version: 0.1
 
-% Description: class used to control the output 
+% Description: class used to control the output
 
 % in device manager: "USB Test and Measurement Device (IVI)"
 
-classdef SirahLaser < handle
+classdef Credo < handle
 
 	% Public and writeable properties
 	properties
@@ -32,28 +32,28 @@ classdef SirahLaser < handle
 	methods
 
 		% Constructor for laser
-		function SirahLaser = SirahLaser()
+		function Credo = Credo()
 			% Find a VISA-USB object.
-			SirahLaser.usbObj = instrfind(...
+			Credo.usbObj = instrfind(...
 				'Type', 'visa-usb', ...
 				'RsrcName', 'USB0::0x17E7::0x0500::18-52-28::0::INSTR', ...
 				'Tag', '');
 
 			% Create the VISA-USB object if it does not exist
 			% otherwise use the object that was found.
-			if isempty(SirahLaser.usbObj)
-    			SirahLaser.usbObj = visa('NI', 'USB0::0x17E7::0x0500::18-52-28::0::INSTR');
+			if isempty(Credo.usbObj)
+    			Credo.usbObj = visa('NI', 'USB0::0x17E7::0x0500::18-52-28::0::INSTR');
 			else
-    			fclose(SirahLaser.usbObj);
-    			SirahLaser.usbObj = SirahLaser.usbObj(1);
+    			fclose(Credo.usbObj);
+    			Credo.usbObj = Credo.usbObj(1);
 			end
 
 			% Connect to instrument object, obj1.
-			fopen(SirahLaser.usbObj);
+			fopen(Credo.usbObj);
 		end
 
-		function delete(SirahLaser)
-			fclose(SirahLaser.usbObj)
+		function delete(Credo)
+			fclose(Credo.usbObj)
 		end
 
 		Clear_Error(sl);  % clears errors in class
@@ -78,7 +78,7 @@ classdef SirahLaser < handle
 
 		% check if connection is established
 		function ic = get.isConnected(sl)
-			if strcmp(sl.usbObj.Status, "open")
+			if strcmp(sl.usbObj.Status, 'open')
 				ic = 1;
 			else
 				ic = 0;
@@ -106,7 +106,7 @@ classdef SirahLaser < handle
 
 				% check laser response if successfull
 				if strcmp(fscanf(sl.usbObj), "OK")
-					fprintf(['[SirahLaser] Set wavelength to ', ...
+					fprintf(['[Credo] Set wavelength to ', ...
 						num2str(lambda), ' nm.\n'])
 				else
 					error('Could not set wavelength.')
