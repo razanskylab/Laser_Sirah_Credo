@@ -1,56 +1,67 @@
-% File: Credo.m @ Credo
+% File: SirahLaser.m @ SirahLaser
 % Author: Urs Hofmann
 % Mail: hofmannu@biomed.ee.ethz.ch
 % Date: 22 Feb 2019
-% Version: 0.1
+% Version: 1.0
 
-% Description: class used to control the output
+% Description: class used to control the sirah dye laser 
 
 % in device manager: "USB Test and Measurement Device (IVI)"
 
-classdef Credo < handle
+classdef SirahLaser < handle
 
 	% Public and writeable properties
 	properties
-		wavelength double {mustBePositive, mustBeFinite};  % represents the wavelength of the laser in [nm]
+		wavelength(1, 1) double = NaN;  % represents the wavelength of the laser in [nm]
 	end
 
 	properties (SetAccess = private)
-		isConnected logical;
-		isBusy logical;  % bool checking if any motor is busy
-		usbObj;
+		isConnected(1, 1) logical;
+		isBusy(1, 1) logical;  % bool checking if any motor is busy
 	end
 
 	properties(Hidden = true, Access = private)
+		usbObj;
 	end
 
 	properties(Constant, Hidden = true)
-		WAVELENGTH_MAX = 900;  % [nm] (taken from manual)
-		WAVELENGTH_MIN = 380;  % [nm] (taken from manual)
+		WAVELENGTH_MAX(1, 1) double = 900;  % [nm] (taken from manual)
+		WAVELENGTH_MIN(1, 1) double = 380;  % [nm] (taken from manual)
 	end
 
 	methods
 
 		% Constructor for laser
-		function Credo = Credo()
-			% Find a VISA-USB object.
-			temp = instrfind('Type', 'visa-usb');
+		function SirahLaser = SirahLaser()
 
+			fprintf("[SirahLaser] Opening connection... ")
+			SirahLaser.usbObj = instrfind(...
+				'Type', 'visa-usb', ...
+				'RsrcName', 'USB0::0x17E7::0x0500::19-04-25::0::INSTR', ...
+				'Tag', '');
+
+			% Find a VISA-USB object.
 			% Create the VISA-USB object if it does not exist
 			% otherwise use the object that was found.
-			if isempty(Credo.usbObj)
-    			Credo.usbObj = visa('NI', 'USB0::0x17E7::0x0500::18-52-28::0::INSTR');
+			if isempty(SirahLaser.usbObj)
+				% replace this line with the appropriate device name
+				SirahLaser.usbObj = visa('NI', 'USB0::0x17E7::0x0500::19-04-25::0::INSTR');
 			else
-    			fclose(Credo.usbObj);
-    			Credo.usbObj = Credo.usbObj(1);
+			  fclose(SirahLaser.usbObj);
+			  SirahLaser.usbObj = SirahLaser.usbObj(1);
 			end
 
 			% Connect to instrument object, obj1.
-			fopen(Credo.usbObj);
+			fopen(SirahLaser.usbObj);
+			fprintf("done!\n");
 		end
 
-		function delete(Credo)
-			fclose(Credo.usbObj)
+		function delete(SirahLaser)
+			fprintf("[SirahLaser] Disconnecting device... ");
+			fclose(SirahLaser.usbObj);
+			delete(SirahLaser.usbObj);
+			SirahLaser.usbObj = [];
+			fprintf("done!\n");
 		end
 
 		Clear_Error(sl);  % clears errors in class
@@ -75,7 +86,7 @@ classdef Credo < handle
 
 		% check if connection is established
 		function ic = get.isConnected(sl)
-			if strcmp(sl.usbObj.Status, 'open')
+			if strcmp(sl.usbObj.Status, "open")
 				ic = 1;
 			else
 				ic = 0;
@@ -103,13 +114,17 @@ classdef Credo < handle
 
 				% check laser response if successfull
 				if strcmp(fscanf(sl.usbObj), "OK")
-					fprintf(['[Credo] Set wavelength to ', ...
+					fprintf(['[SirahLaser] Set wavelength to ', ...
 						num2str(lambda), ' nm.\n'])
 				else
 					error('Could not set wavelength.')
 				end
 			else
 				error('Wavelength not within valid range');
+			end
+
+			while(sl.isBusy)
+				pause(0.1);
 			end
 		end
 
