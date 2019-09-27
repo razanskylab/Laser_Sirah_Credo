@@ -12,16 +12,16 @@ classdef Credo < handle
 
 	% Public and writeable properties
 	properties
-		wavelength;  % represents the wavelength of the laser in [nm]
+		wavelength double {mustBePositive, mustBeFinite};  % represents the wavelength of the laser in [nm]
 	end
 
 	properties (SetAccess = private)
-		isConnected;
-		isBusy;  % bool checking if any motor is busy
+		isConnected logical;
+		isBusy logical;  % bool checking if any motor is busy
+		usbObj;
 	end
 
 	properties(Hidden = true, Access = private)
-		usbObj;
 	end
 
 	properties(Constant, Hidden = true)
@@ -34,10 +34,7 @@ classdef Credo < handle
 		% Constructor for laser
 		function Credo = Credo()
 			% Find a VISA-USB object.
-			Credo.usbObj = instrfind(...
-				'Type', 'visa-usb', ...
-				'RsrcName', 'USB0::0x17E7::0x0500::18-52-28::0::INSTR', ...
-				'Tag', '');
+			temp = instrfind('Type', 'visa-usb');
 
 			% Create the VISA-USB object if it does not exist
 			% otherwise use the object that was found.
