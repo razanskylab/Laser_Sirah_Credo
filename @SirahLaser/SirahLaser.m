@@ -6,7 +6,9 @@
 
 % Description: class used to control the sirah dye laser 
 
-% in device manager: "USB Test and Measurement Device (IVI)"
+% Notes:
+% 	After cloning this repository you might want to adjust the serial-Number
+%		defined on lone 30 to your needs
 
 classdef SirahLaser < handle
 
@@ -25,19 +27,28 @@ classdef SirahLaser < handle
 	end
 
 	properties(Constant, Hidden = true)
+		serialNumber = '18-52-28';
 		WAVELENGTH_MAX(1, 1) double = 900;  % [nm] (taken from manual)
 		WAVELENGTH_MIN(1, 1) double = 380;  % [nm] (taken from manual)
 	end
 
+	properties(Dependent)
+		rsrcName;
+	end
+
 	methods
+
+		function rsrcName = get.rsrcName(sl)
+			rsrcName = ['USB0::0x17E7::0x0500::', SirahLaser.serialNumber, '::0::INSTR'];
+		end
 
 		% Constructor for laser
 		function SirahLaser = SirahLaser()
 
-			fprintf("[SirahLaser] Opening connection... ")
+			fprintf("[SirahLaser] Opening connection... ");
 			SirahLaser.usbObj = instrfind(...
 				'Type', 'visa-usb', ...
-				'RsrcName', 'USB0::0x17E7::0x0500::19-04-25::0::INSTR', ...
+				'RsrcName', SirahLaser.rsrcName, ...
 				'Tag', '');
 
 			% Find a VISA-USB object.
@@ -45,7 +56,7 @@ classdef SirahLaser < handle
 			% otherwise use the object that was found.
 			if isempty(SirahLaser.usbObj)
 				% replace this line with the appropriate device name
-				SirahLaser.usbObj = visa('NI', 'USB0::0x17E7::0x0500::19-04-25::0::INSTR');
+				SirahLaser.usbObj = visa('NI', SirahLaser.rsrcName);
 			else
 			  fclose(SirahLaser.usbObj);
 			  SirahLaser.usbObj = SirahLaser.usbObj(1);
